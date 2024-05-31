@@ -9,34 +9,45 @@ using namespace sf;
 class Bullet{
 public:
     Sprite Shape;
-    bool collision(Vector2f bulletPosition){
-        return 0 ; 
-    }
-    void update(){
-        //if (!this->collision(Shape.getPosition()))
-        Shape.move(0, -10);
-    }
-    Bullet (Texture &Texture, Vector2f playerPosition){
+    
+    Bullet(Texture &Texture, Vector2f playerPosition){
         Shape.setTexture(Texture);
-        Shape.setScale(1.f,1.f);
-        Shape.setPosition((playerPosition.x+90.f),playerPosition.y );
+        Shape.setScale(1.f, 1.f);
+        Shape.setPosition(playerPosition.x + playerPosition.x / 2 - 5.f, playerPosition.y - 20.f); // Ajustar la posición de la bala
+    }
+
+    void update(){
+        Shape.move(0, -10);
     }
 };
 
 class Enemy{
 public:
     Sprite Shape;
-    bool collision(Vector2f enemyPosition){
-        return 0 ; 
-    }
-    void update(){
-        //if (!this->collision(Shape.getPosition()))
-        Shape.move(0, 3);
-    }
+    
     Enemy(Texture &Texture, Vector2f position){
         Shape.setTexture(Texture);
-        Shape.setScale(1.f, 1.f);
+        Shape.setScale(2.f, 2.f); // Aumentar el tamaño del enemigo
         Shape.setPosition(position);
+    }
+
+    void update(){
+        Shape.move(0, 3);
+    }
+};
+
+class Enemy2 {
+public:
+    Sprite Shape;
+
+    Enemy2(Texture &Texture, Vector2f position) {
+        Shape.setTexture(Texture);
+        Shape.setScale(2.f, 2.f); // Aumentar el tamaño del enemigo
+        Shape.setPosition(position);
+    }
+
+    void update() {
+        Shape.move(0, 4); // Diferente velocidad para el segundo tipo de enemigo
     }
 };
 
@@ -48,8 +59,8 @@ int main()
     Texture playerTexture, bulletTexture, enemyTexture, enemy2Texture;
     if (!playerTexture.loadFromFile("nave.png") ||
         !bulletTexture.loadFromFile("superbullet.png") ||
-        !enemy2Texture.loadFromFile("redvs.png") ||
-        !enemyTexture.loadFromFile("bluevs.png"))
+        !enemyTexture.loadFromFile("bluevs.png") ||
+        !enemy2Texture.loadFromFile("redvs.png"))
     {
         cout << "Error al cargar las texturas" << endl;
         return 1;
@@ -60,6 +71,7 @@ int main()
 
     vector<Bullet> bullets; 
     vector<Enemy> enemies; 
+    vector<Enemy2> enemies2;
 
     Texture backgroundTexture;
     if (!backgroundTexture.loadFromFile("space.png"))
@@ -117,22 +129,80 @@ int main()
             int randomY = -rand() % 100; // Posición Y aleatoria arriba de la pantalla
             Enemy newEnemy(enemyTexture, Vector2f(randomX, randomY));
             enemies.push_back(newEnemy);
-  
+        }
+
+        // Generar el segundo tipo de enemigos aleatorios
+        if (frames % 180 == 0){
+            int randomX = rand() % 1000; // Posición X aleatoria
+            int randomY = -rand() % 100; // Posición Y aleatoria arriba de la pantalla
+            Enemy2 newEnemy2(enemy2Texture, Vector2f(randomX, randomY));
+            enemies2.push_back(newEnemy2);
         }
 
         window.clear();
         window.draw(background);
-        
+
         // Actualizar y dibujar balas
-        for(auto &b : bullets){
-            b.update();
-            window.draw(b.Shape);
+        for (auto it = bullets.begin(); it != bullets.end(); ) {
+            it->update();
+            if (it->Shape.getPosition().y < 0) {
+                it = bullets.erase(it);
+            } else {
+                window.draw(it->Shape);
+                ++it;
+            }
         }
 
         // Actualizar y dibujar enemigos
-        for(auto &e : enemies){
-            e.update();
-            window.draw(e.Shape);
+        for (auto it = enemies.begin(); it != enemies.end(); ) {
+            it->update();
+            if (it->Shape.getPosition().y > 800) {
+                it = enemies.erase(it);
+            } else {
+                window.draw(it->Shape);
+                ++it;
+            }
+        }
+
+        // Actualizar y dibujar el segundo tipo de enemigos
+        for (auto it = enemies2.begin(); it != enemies2.end(); ) {
+            it->update();
+            if (it->Shape.getPosition().y > 800) {
+                it = enemies2.erase(it);
+            } else {
+                window.draw(it->Shape);
+                ++it;
+            }
+        }
+
+        // Detección de colisiones
+        for (auto itB = bullets.begin(); itB != bullets.end(); ) {
+            bool bulletErased = false;
+            for (auto itE = enemies.begin(); itE != enemies.end(); ) {
+                if (itB->Shape.getGlobalBounds().intersects(itE->Shape.getGlobalBounds())) {
+                    itE = enemies.erase(itE);
+                    itB = bullets.erase(itB);
+                    bulletErased = true;
+                    break;
+                } else {
+                    ++itE;
+                }
+            }
+            if (!bulletErased) {
+                for (auto itE2 = enemies2.begin(); itE2 != enemies2.end(); ) {
+                    if (itB->Shape.getGlobalBounds().intersects(itE2->Shape.getGlobalBounds())) {
+                        itE2 = enemies2.erase(itE2);
+                        itB = bullets.erase(itB);
+                        bulletErased = true;
+                        break;
+                    } else {
+                        ++itE2;
+                    }
+                }
+            }
+            if (!bulletErased) {
+                ++itB;
+            }
         }
 
         window.draw(player);
