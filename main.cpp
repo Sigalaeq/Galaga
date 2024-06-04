@@ -136,7 +136,7 @@ int main() {
         }
 
         Vector2f m;
-        float mmm = 4;
+        float mmm = 7;
         if (sf::Keyboard::isKeyPressed(sf::Keyboard::Left))
             m.x = -mmm;
         if (sf::Keyboard::isKeyPressed(sf::Keyboard::Right))
@@ -190,7 +190,7 @@ int main() {
         }
 
         // Generar corazones cada 300 frames
-        if (frames % 1500 == 0) {
+        if (frames % 1000 == 0) {
             int randomX = rand() % 1000; // Posición X aleatoria
             Heart newHeart(heartTexture, Vector2f(randomX, -50)); // Posición Y aleatoria arriba de la pantalla
             hearts.push_back(newHeart);
@@ -226,7 +226,7 @@ int main() {
             it->update();
             if (it->Shape.getPosition().y > 800) {
                 it = enemies.erase(it);
-                score -= 2; // Restar puntos cuando un enemigo sale de la pantalla
+                score --; // Restar puntos cuando un enemigo sale de la pantalla
                 cout << "Score: " << score << endl; // Imprimir el puntaje en la consola
             } else {
                 window.draw(it->Shape);
@@ -239,7 +239,7 @@ int main() {
             it->update();
             if (it->Shape.getPosition().y > 800) {
                 it = enemies2.erase(it);
-                score -= 2; // Restar puntos cuando un enemigo sale de la pantalla
+                score --; // Restar puntos cuando un enemigo sale de la pantalla
                 cout << "Score: " << score << endl; // Imprimir el puntaje en la consola
             } else {
                 window.draw(it->Shape);
@@ -301,16 +301,16 @@ int main() {
                     playerHealth--;
                     cout << "Player Health: " << playerHealth << endl; // Imprimir la salud del jugador en la consola
                     gg = 10;
-                    if (playerHealth <= 0) {
-                        cout << "Game Over" << endl;
-                        window.close();
-                    }
+                   
                 } else {
                     ++itEB;
                 }
             }
         } else gg--;
-
+         if (playerHealth <= 0 || score<0 ) {
+                        cout << "Game Over" << endl;
+                        window.close();
+                    }
         // Detección de colisiones entre el jugador y los enemigos
         for (auto itE = enemies.begin(); itE != enemies.end(); ) {
             if (itE->Shape.getGlobalBounds().intersects(player.getGlobalBounds())) {
